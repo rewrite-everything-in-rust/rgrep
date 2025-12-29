@@ -197,10 +197,10 @@ impl Matcher {
         }
 
         for (idx, (num, line_bytes)) in lines.iter().enumerate() {
-            if let Some(max) = self.config.max_count {
-                if match_count >= max {
-                    break;
-                }
+            if let Some(max) = self.config.max_count
+                && match_count >= max
+            {
+                break;
             }
 
             let is_match = self.regex.is_match(line_bytes);
@@ -247,10 +247,10 @@ impl Matcher {
             .collect();
 
         for (idx, (num, line)) in lines.iter().enumerate() {
-            if let Some(max) = self.config.max_count {
-                if match_count >= max {
-                    break;
-                }
+            if let Some(max) = self.config.max_count
+                && match_count >= max
+            {
+                break;
             }
 
             let is_match = self.regex.is_match(line);
@@ -301,15 +301,14 @@ impl Matcher {
         idx: usize,
         all_lines: &[(usize, Vec<u8>)],
     ) -> io::Result<()> {
-        if let Some(fname) = filename {
-            if self.config.with_filename
-                || (!self.config.no_filename && self.config.files.len() > 1)
-            {
-                if self.config.color {
-                    write!(handle, "\x1b[35m{}\x1b[0m:", fname)?;
-                } else {
-                    write!(handle, "{}:", fname)?;
-                }
+        if let Some(fname) = filename
+            && (self.config.with_filename
+                || (!self.config.no_filename && self.config.files.len() > 1))
+        {
+            if self.config.color {
+                write!(handle, "\x1b[35m{}\x1b[0m:", fname)?;
+            } else {
+                write!(handle, "{}:", fname)?;
             }
         }
 
@@ -323,8 +322,8 @@ impl Matcher {
 
         if self.config.byte_offset {
             let mut offset = 0;
-            for i in 0..idx {
-                offset += all_lines[i].1.len() + 1;
+            for (_, line_bytes) in all_lines.iter().take(idx) {
+                offset += line_bytes.len() + 1;
             }
             write!(handle, "{}:", offset)?;
         }
@@ -340,13 +339,11 @@ impl Matcher {
                     writeln!(handle)?;
                 }
             }
+        } else if self.config.color && !self.config.invert_match {
+            self.print_colored(handle, line)?;
         } else {
-            if self.config.color && !self.config.invert_match {
-                self.print_colored(handle, line)?;
-            } else {
-                handle.write_all(line)?;
-                writeln!(handle)?;
-            }
+            handle.write_all(line)?;
+            writeln!(handle)?;
         }
 
         Ok(())
@@ -361,15 +358,14 @@ impl Matcher {
         idx: usize,
         all_lines: &[(usize, &[u8])],
     ) -> io::Result<()> {
-        if let Some(fname) = filename {
-            if self.config.with_filename
-                || (!self.config.no_filename && self.config.files.len() > 1)
-            {
-                if self.config.color {
-                    write!(handle, "\x1b[35m{}\x1b[0m:", fname)?;
-                } else {
-                    write!(handle, "{}:", fname)?;
-                }
+        if let Some(fname) = filename
+            && (self.config.with_filename
+                || (!self.config.no_filename && self.config.files.len() > 1))
+        {
+            if self.config.color {
+                write!(handle, "\x1b[35m{}\x1b[0m:", fname)?;
+            } else {
+                write!(handle, "{}:", fname)?;
             }
         }
 
@@ -383,8 +379,8 @@ impl Matcher {
 
         if self.config.byte_offset {
             let mut offset = 0;
-            for i in 0..idx {
-                offset += all_lines[i].1.len() + 1;
+            for (_, line) in all_lines.iter().take(idx) {
+                offset += line.len() + 1;
             }
             write!(handle, "{}:", offset)?;
         }
@@ -400,13 +396,11 @@ impl Matcher {
                     writeln!(handle)?;
                 }
             }
+        } else if self.config.color && !self.config.invert_match {
+            self.print_colored(handle, line)?;
         } else {
-            if self.config.color && !self.config.invert_match {
-                self.print_colored(handle, line)?;
-            } else {
-                handle.write_all(line)?;
-                writeln!(handle)?;
-            }
+            handle.write_all(line)?;
+            writeln!(handle)?;
         }
 
         Ok(())
@@ -438,10 +432,10 @@ impl Matcher {
                 if let Ok(result) = self.search_directory(path.to_str().unwrap()) {
                     found = found || result;
                 }
-            } else if path.is_file() {
-                if let Ok(result) = self.search_file(path.to_str().unwrap()) {
-                    found = found || result;
-                }
+            } else if path.is_file()
+                && let Ok(result) = self.search_file(path.to_str().unwrap())
+            {
+                found = found || result;
             }
         }
 
